@@ -9,7 +9,7 @@ let pausedTrack = null;
 let pausedPosition = 0;
 let lastPlayedTrack = null;
 
-// maintain a local queue (cant fetch spotify queue for some reason???)
+// maintain a local queue
 let queue = [];
 
 // get access token from link
@@ -60,7 +60,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.connect();
 };
 
-// play da song
+// play a song
 function playTrack(trackUri, positionMs = 0) {
     if (!deviceId) return;
 
@@ -86,7 +86,7 @@ function playTrack(trackUri, positionMs = 0) {
     });
 }
 
-// get users last played song
+// get user's last played song
 function fetchLastPlayedTrack() {
     if (!accessToken) return;
 
@@ -104,7 +104,7 @@ function fetchLastPlayedTrack() {
         });
 }
 
-// pause da song
+// pause the song
 function pauseTrack() {
     if (!deviceId) return;
 
@@ -228,6 +228,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (accessToken) {
         localStorage.setItem('spotifyAccessToken', accessToken);
+
+        // remove the access token from url
+        if (window.location.hash) {
+            history.replaceState(null, null, window.location.pathname + window.location.search);
+        }
 
         document.getElementById('login').style.display = 'none';
         document.getElementById('player').style.display = 'block';
