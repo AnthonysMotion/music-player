@@ -7,6 +7,7 @@ let player = null;
 let deviceId = '';
 let pausedTrack = null;
 let pausedPosition = 0;
+let lastPlayedTrack = null;
 
 // get access token from link
 function getAccessTokenFromUrl() {
@@ -104,11 +105,10 @@ function fetchLastPlayedTrack() {
             if (data.items.length > 0) {
                 const lastPlayedItem = data.items[0].track;
                 lastPlayedTrack = lastPlayedItem.uri;
-                pausedPosition = data.items[0].played_at;
+                pausedPosition = new Date(data.items[0].played_at).getTime();
             }
         });
 }
-
 
 // pause da song
 function pauseTrack() {
@@ -214,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const query = document.getElementById('search-input').value;
             searchSongs(query);
         });
+        document.getElementById('toggle-user-info-btn').addEventListener('click', toggleUserInfo);
     } else {
         document.getElementById('login-btn').addEventListener('click', redirectToSpotifyLogin);
     }
