@@ -14,7 +14,7 @@ function getAccessTokenFromUrl() {
 // Fetch user data and update the DOM
 function fetchUserData() {
     if (!accessToken) {
-        console.error('No access token available.');
+        console.error('no access token available');
         return;
     }
 
@@ -25,7 +25,6 @@ function fetchUserData() {
         }
     }).then(response => response.json())
       .then(data => {
-        console.log('User Profile Data:', data);
         document.getElementById('user-name').textContent = data.display_name;
         document.getElementById('user-profile-picture').src = data.images[0]?.url || 'default-profile.png';
     }).catch(error => console.error('Error fetching user profile:', error));
@@ -36,7 +35,6 @@ function fetchUserData() {
         }
     }).then(response => response.json())
       .then(data => {
-        console.log('Top Tracks Data:', data);
         const tracksList = document.getElementById('top-tracks');
         tracksList.innerHTML = '';
         if (data.items && Array.isArray(data.items)) {
@@ -46,9 +44,9 @@ function fetchUserData() {
                 tracksList.appendChild(trackItem);
             });
         } else {
-            tracksList.innerHTML = '<li>No top tracks available.</li>';
+            tracksList.innerHTML = '<li>no top tracks</li>';
         }
-    }).catch(error => console.error('Error fetching top tracks:', error));
+    }).catch(error => console.error('error fetching top tracks: ', error));
 
     fetch('https://api.spotify.com/v1/me/top/artists?limit=5', {
         headers: {
@@ -56,7 +54,6 @@ function fetchUserData() {
         }
     }).then(response => response.json())
       .then(data => {
-        console.log('Top Artists Data:', data);
         const artistsList = document.getElementById('top-artists');
         artistsList.innerHTML = '';
         if (data.items && Array.isArray(data.items)) {
@@ -66,9 +63,9 @@ function fetchUserData() {
                 artistsList.appendChild(artistItem);
             });
         } else {
-            artistsList.innerHTML = '<li>No top artists available.</li>';
+            artistsList.innerHTML = '<li>no top artists</li>';
         }
-    }).catch(error => console.error('Error fetching top artists:', error));
+    }).catch(error => console.error('error fetching top artists: ', error));
 }
 
 // make work with html
@@ -80,6 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fetchUserData();
     } else {
-        console.error('No access token available.');
+        console.error('no access token available');
     }
 });
