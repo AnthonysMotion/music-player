@@ -11,10 +11,9 @@ function getAccessTokenFromUrl() {
     return params.get('access_token');
 }
 
-// Fetch user data and update the DOM
+// fetch user data
 function fetchUserData() {
     if (!accessToken) {
-        console.error('no access token available');
         return;
     }
 
@@ -27,7 +26,7 @@ function fetchUserData() {
       .then(data => {
         document.getElementById('user-name').textContent = data.display_name;
         document.getElementById('user-profile-picture').src = data.images[0]?.url || 'default-profile.png';
-    }).catch(error => console.error('Error fetching user profile:', error));
+    });
 
     fetch('https://api.spotify.com/v1/me/top/tracks?limit=5', {
         headers: {
@@ -46,7 +45,7 @@ function fetchUserData() {
         } else {
             tracksList.innerHTML = '<li>no top tracks</li>';
         }
-    }).catch(error => console.error('error fetching top tracks: ', error));
+    });
 
     fetch('https://api.spotify.com/v1/me/top/artists?limit=5', {
         headers: {
@@ -65,7 +64,7 @@ function fetchUserData() {
         } else {
             artistsList.innerHTML = '<li>no top artists</li>';
         }
-    }).catch(error => console.error('error fetching top artists: ', error));
+    });
 }
 
 // make work with html
@@ -76,7 +75,5 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('spotifyAccessToken', accessToken);
 
         fetchUserData();
-    } else {
-        console.error('no access token available');
     }
 });
