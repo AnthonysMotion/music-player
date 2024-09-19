@@ -1,6 +1,6 @@
-const clientId = '1bb93e0197cd43eda134cc008e1d05cd';
-const redirectUri = 'http://127.0.0.1:5500';
-const scopes = 'streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state';
+const clientId = '1bb93e0197cd43eda134cc008e1d05cd';  // Replace with your Spotify Client ID
+const redirectUri = 'http://127.0.0.1:5500';  // Replace with your Redirect URI
+const scopes = 'streaming user-read-email user-read-private user-top-read user-modify-playback-state user-read-playback-state';
 
 let accessToken = '';
 let player = null;
@@ -28,8 +28,8 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         name: 'anth keez web player',
         getOAuthToken: cb => { cb(accessToken); },
         volume: 0.5
-});
-    
+    });
+
     player.addListener('ready', ({ device_id }) => {
         console.log('ready, device id: ', device_id);
         deviceId = device_id;
@@ -47,7 +47,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         }
     });
     
-    player.connect()
+    player.connect();
 };
 
 // play da song (its set to tsubi club - laced up for now)
@@ -70,7 +70,7 @@ function playTrack() {
         } else {
             console.error('track cannot play: ', response);
         }
-    });
+    }).catch(error => console.error('Error playing track:', error));
 }
 
 // pause da song
@@ -92,14 +92,15 @@ function pauseTrack() {
         } else {
             console.error('cannot pause: ', response);
         }
-    })
+    }).catch(error => console.error('Error pausing playback:', error));
 }
 
-// make the html buttons do shit
 document.addEventListener('DOMContentLoaded', () => {
-    accessToken = getAccessTokenFromUrl();
+    accessToken = localStorage.getItem('spotifyAccessToken') || getAccessTokenFromUrl();
     
     if (accessToken) {
+        localStorage.setItem('spotifyAccessToken', accessToken);
+
         document.getElementById('login').style.display = 'none';
         document.getElementById('player').style.display = 'block';
         
