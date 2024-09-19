@@ -9,6 +9,9 @@ let pausedTrack = null;
 let pausedPosition = 0;
 let lastPlayedTrack = null;
 
+// maintain a local queue (cant fetch spotify queue for some reason???)
+let queue = [];
+
 // get access token from link
 function getAccessTokenFromUrl() {
     const hash = window.location.hash.substring(1);
@@ -146,6 +149,46 @@ function formatDuration(ms) {
     return `${minutes}:${(seconds < 10 ? '0' : '')}${seconds}`;
 }
 
+function addToQueue(trackUri, trackName, trackArtist) {
+    if (!deviceId || !accessToken) {
+        return;
+    }
+
+    // add track to the local queue
+    queue.push({ uri: trackUri, name: trackName, artist: trackArtist });
+
+    updateQueueList();
+
+    // add to Spotify queue
+    fetch(`https://api.spotify.com/v1/me/player/queue?uri=${trackUri}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    }).then(response => {
+        if (response.ok) {
+            console.log('Track added to queue successfully');
+        } else {
+            console.error('Failed to add track to queue');
+        }
+    });
+}
+
+function updateQueueList() {
+    const queueList = document.getElementById('queue-list');
+    queueList.innerHTML = '';
+
+    if (queue.length > 0) {
+        queue.forEach(track => {
+            const trackItem = document.createElement('li');
+            trackItem.textContent = `${track.name} by ${track.artist}`;
+            queueList.appendChild(trackItem);
+        });
+    } else {
+        queueList.innerHTML = '<li>No tracks in the queue</li>';
+    }
+}
+
 // search for a song and display results
 function searchSongs(query) {
     if (!accessToken) {
@@ -169,6 +212,7 @@ function searchSongs(query) {
                         <img src="${track.album.images[0].url}" alt="${track.name}" width="50">
                         <span>${track.name} - ${track.artists.map(artist => artist.name).join(', ')}</span>
                         <button class="play-track" data-uri="${track.uri}">Play</button>
+                        <button class="add-to-queue" data-uri="${track.uri}" data-name="${track.name}" data-artist="${track.artists.map(artist => artist.name).join(', ')}">Add</button>
                     `;
                     resultsContainer.appendChild(trackElement);
                 });
@@ -177,6 +221,15 @@ function searchSongs(query) {
                     button.addEventListener('click', (event) => {
                         const trackUri = event.target.getAttribute('data-uri');
                         playTrack(trackUri, pausedPosition);
+                    });
+                });
+
+                document.querySelectorAll('.add-to-queue').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const trackUri = event.target.getAttribute('data-uri');
+                        const trackName = event.target.getAttribute('data-name');
+                        const trackArtist = event.target.getAttribute('data-artist');
+                        addToQueue(trackUri, trackName, trackArtist);
                     });
                 });
             } else {
@@ -214,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const query = document.getElementById('search-input').value;
             searchSongs(query);
         });
-        document.getElementById('toggle-user-info-btn').addEventListener('click', toggleUserInfo);
     } else {
         document.getElementById('login-btn').addEventListener('click', redirectToSpotifyLogin);
     }
