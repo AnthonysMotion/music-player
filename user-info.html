@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Info Toggle</title>
-    <style>
-        #user-info {
-            display: none;
-        }
-    </style>
+    <title>user info</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/user-info.js"></script>
 </head>
 <body>
-    <button id="toggle-info-btn">Show User Info</button>
     <div id="user-info">
         <h1 id="user-name"></h1>
         <img id="user-profile-picture" src="" alt="Profile Picture" width="100">
+        <h2>top tracks</h2>
         <ul id="top-tracks"></ul>
+        <h3>top artists</h3>
         <ul id="top-artists"></ul>
     </div>
+    <a href="index.html">
+        <button>back</button>
+    </a>
     <script src="your-script.js"></script>
 </body>
 </html>
