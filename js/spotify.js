@@ -18,6 +18,13 @@ function redirectToSpotifyLogin() {
     window.location = authUrl;
 }
 
+function redirectToSpotifyLogout() {
+    // Clear the access token from local storage
+    localStorage.removeItem('spotifyAccessToken');
+    // Redirect to the Spotify logout URL
+    window.location = 'https://accounts.spotify.com/logout';
+}
+
 window.onSpotifyWebPlaybackSDKReady = () => {
     if (typeof Spotify === 'undefined') {
         console.error('spotify sdk not ready');
@@ -95,6 +102,7 @@ function pauseTrack() {
     }).catch(error => console.error('Error pausing playback:', error));
 }
 
+// make work with html
 document.addEventListener('DOMContentLoaded', () => {
     accessToken = localStorage.getItem('spotifyAccessToken') || getAccessTokenFromUrl();
     
@@ -112,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('play-btn').addEventListener('click', playTrack);
         document.getElementById('pause-btn').addEventListener('click', pauseTrack);
+        document.getElementById('logout-btn').addEventListener('click', redirectToSpotifyLogout);
     } else {
         document.getElementById('login-btn').addEventListener('click', redirectToSpotifyLogin);
     }
