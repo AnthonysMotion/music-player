@@ -38,7 +38,6 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     });
 
     player.addListener('ready', ({ device_id }) => {
-        console.log('ready, device id: ', device_id);
         deviceId = device_id;
     });
     
@@ -48,7 +47,6 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.addListener('playback_error', ({ message }) => { console.error('playback error: ', message); });
     
     player.addListener('player_state_changed', (state) => {
-        console.log('player state changed: ', state);
         if (state) {
             document.getElementById('track-name').textContent = state.track_window.current_track.name;
         }
@@ -72,9 +70,7 @@ function playTrack() {
             'Authorization': `Bearer ${accessToken}`
         }
     }).then(response => {
-        if (response.ok) {
-            console.log('track is playing!!');
-        } else {
+        if (!response.ok) {
             console.error('track cannot play: ', response);
         }
     }).catch(error => console.error('Error playing track:', error));
@@ -94,9 +90,7 @@ function pauseTrack() {
             'Authorization': `Bearer ${accessToken}`
         }
     }).then(response => {
-        if (response.ok) {
-            console.log('playback paused');
-        } else {
+        if (!response.ok) {
             console.error('cannot pause: ', response);
         }
     }).catch(error => console.error('Error pausing playback:', error));
