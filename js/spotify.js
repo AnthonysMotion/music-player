@@ -34,10 +34,8 @@ function handleLogout() {
 
 // start spotify playback
 window.onSpotifyWebPlaybackSDKReady = () => {
-    if (typeof Spotify === 'undefined') {
-        return;
-    }
-    
+    if (typeof Spotify === 'undefined') return;
+
     player = new Spotify.Player({
         name: 'anth keez web player',
         getOAuthToken: cb => { cb(accessToken); },
@@ -47,11 +45,10 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.addListener('ready', ({ device_id }) => {
         deviceId = device_id;
     });
-    
+
     player.addListener('player_state_changed', (state) => {
         if (state) {
             const currentTrack = state.track_window.current_track;
-            
             document.getElementById('track-name').textContent = currentTrack.name;
             document.getElementById('track-artist').textContent = currentTrack.artists.map(artist => artist.name).join(', ');
             document.getElementById('track-album').textContent = currentTrack.album.name;
@@ -59,15 +56,13 @@ window.onSpotifyWebPlaybackSDKReady = () => {
             document.getElementById('track-image').src = currentTrack.album.images[0].url;
         }
     });
-    
+
     player.connect();
 };
 
 // play da song
 function playTrack(trackUri, positionMs = 0) {
-    if (!deviceId) {
-        return;
-    }
+    if (!deviceId) return;
 
     fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
         method: 'PUT',
@@ -77,27 +72,23 @@ function playTrack(trackUri, positionMs = 0) {
             'Authorization': `Bearer ${accessToken}`
         }
     }).then(response => {
-        if (response.ok) {
-            if (positionMs > 0) {
-                setTimeout(() => {
-                    fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${positionMs}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${accessToken}`
-                        }
-                    });
-                }, 100);
-            }
+        if (response.ok && positionMs > 0) {
+            setTimeout(() => {
+                fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${positionMs}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+            }, 100);
         }
     });
 }
 
 // get users last played song
 function fetchLastPlayedTrack() {
-    if (!accessToken) {
-        return;
-    }
+    if (!accessToken) return;
 
     fetch('https://api.spotify.com/v1/me/player/recently-played?limit=1', {
         headers: {
@@ -115,9 +106,7 @@ function fetchLastPlayedTrack() {
 
 // pause da song
 function pauseTrack() {
-    if (!deviceId) {
-        return;
-    }
+    if (!deviceId) return;
 
     fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
         method: 'PUT',
@@ -150,13 +139,10 @@ function formatDuration(ms) {
 }
 
 function addToQueue(trackUri, trackName, trackArtist) {
-    if (!deviceId || !accessToken) {
-        return;
-    }
+    if (!deviceId || !accessToken) return;
 
     // add track to the local queue
     queue.push({ uri: trackUri, name: trackName, artist: trackArtist });
-
     updateQueueList();
 
     // add to Spotify queue
@@ -191,9 +177,7 @@ function updateQueueList() {
 
 // search for a song and display results
 function searchSongs(query) {
-    if (!accessToken) {
-        return;
-    }
+    if (!accessToken) return;
 
     fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
         headers: {
