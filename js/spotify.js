@@ -5,8 +5,10 @@ const scopes = 'streaming user-read-email user-read-private user-top-read user-m
 let accessToken = '';
 let player = null;
 let deviceId = '';
+let pausedTrack = null;
+let pausedPosition = 0;
 
-// get access token
+// get access token from link
 function getAccessTokenFromUrl() {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
@@ -29,7 +31,6 @@ function handleLogout() {
 // start spotify playback
 window.onSpotifyWebPlaybackSDKReady = () => {
     if (typeof Spotify === 'undefined') {
-        console.error('Spotify SDK is not loaded.');
         return;
     }
     
@@ -39,79 +40,82 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         volume: 0.5
     });
 
-    // ready
     player.addListener('ready', ({ device_id }) => {
-        console.log('Ready with Device ID', device_id);
         deviceId = device_id;
     });
     
-    // error handling
-    player.addListener('initialization_error', ({ message }) => { console.error('Initialization Error:', message); });
-    player.addListener('authentication_error', ({ message }) => { console.error('Authentication Error:', message); });
-    player.addListener('account_error', ({ message }) => { console.error('Account Error:', message); });
-    player.addListener('playback_error', ({ message }) => { console.error('Playback Error:', message); });
-    
     player.addListener('player_state_changed', (state) => {
         if (state) {
-            const track = state.track_window.current_track;
-            document.getElementById('track-name').textContent = track.name;
-            document.getElementById('track-artist').textContent = track.artists.map(artist => artist.name).join(', ');
-            document.getElementById('track-album').textContent = track.album.name;
-            document.getElementById('track-duration').textContent = formatDuration(track.duration_ms);
-            document.getElementById('track-image').src = track.album.images[0].url;
-            document.getElementById('release-date').textContent = track.album.release_date;
+            const currentTrack = state.track_window.current_track;
+            
+            document.getElementById('track-name').textContent = currentTrack.name;
+            document.getElementById('track-artist').textContent = currentTrack.artists.map(artist => artist.name).join(', ');
+            document.getElementById('track-album').textContent = currentTrack.album.name;
+            document.getElementById('track-duration').textContent = formatDuration(state.duration);
+            document.getElementById('track-image').src = currentTrack.album.images[0].url;
         }
     });
     
     player.connect();
 };
 
-// play da song (it plays users last played song for now)
-function playLastPlayedTrack() {
+// play da song
+function playTrack(trackUri, positionMs = 0) {
     if (!deviceId) {
-        console.error('No device ID available. Cannot play track.');
         return;
     }
 
-    fetch('https://api.spotify.com/v1/me/player/recently-played', {
+    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ uris: [trackUri] }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        }
+    }).then(response => {
+        if (response.ok) {
+            if (positionMs > 0) {
+                setTimeout(() => {
+                    fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${positionMs}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+                }, 100);
+            }
+        }
+    });
+}
+
+// get users last played song
+function fetchLastPlayedTrack() {
+    if (!accessToken) {
+        return;
+    }
+
+    fetch('https://api.spotify.com/v1/me/player/recently-played?limit=1', {
         headers: {
             'Authorization': `Bearer ${accessToken}`
         }
     }).then(response => response.json())
         .then(data => {
-            if (data.items && data.items.length > 0) {
-                const lastPlayedTrack = data.items[0].track;
-                const trackUri = lastPlayedTrack.uri;
-
-                fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ uris: [trackUri] }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                }).then(response => {
-                    if (response.ok) {
-                        console.log('Playing last played track:', lastPlayedTrack.name);
-                    } else {
-                        console.error('Failed to play track', response);
-                    }
-                });
-            } else {
-                console.error('No recently played tracks found.');
+            if (data.items.length > 0) {
+                const lastPlayedItem = data.items[0].track;
+                lastPlayedTrack = lastPlayedItem.uri;
+                pausedPosition = data.items[0].played_at;
             }
-        }).catch(error => {
-            console.error('Error fetching recently played tracks:', error);
         });
 }
+
 
 // pause da song
 function pauseTrack() {
     if (!deviceId) {
-        console.error('No device ID available. Cannot pause playback.');
         return;
     }
-    
+
     fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
         method: 'PUT',
         headers: {
@@ -120,18 +124,65 @@ function pauseTrack() {
         }
     }).then(response => {
         if (response.ok) {
-            console.log('Playback paused');
-        } else {
-            console.error('Failed to pause playback', response);
+            fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    if (data && data.item) {
+                        pausedTrack = data.item;
+                        pausedPosition = data.progress_ms;
+                    }
+                });
         }
     });
 }
 
-// format track duration
+// format duration from milliseconds to minutes:seconds
 function formatDuration(ms) {
     const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    const seconds = ((ms % 60000) / 1000).toFixed(0);
+    return `${minutes}:${(seconds < 10 ? '0' : '')}${seconds}`;
+}
+
+// search for a song and display results
+function searchSongs(query) {
+    if (!accessToken) {
+        return;
+    }
+
+    fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    }).then(response => response.json())
+        .then(data => {
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '';
+
+            if (data.tracks.items.length > 0) {
+                data.tracks.items.forEach(track => {
+                    const trackElement = document.createElement('div');
+                    trackElement.classList.add('track-item');
+                    trackElement.innerHTML = `
+                        <img src="${track.album.images[0].url}" alt="${track.name}" width="50">
+                        <span>${track.name} - ${track.artists.map(artist => artist.name).join(', ')}</span>
+                        <button class="play-track" data-uri="${track.uri}">Play</button>
+                    `;
+                    resultsContainer.appendChild(trackElement);
+                });
+
+                document.querySelectorAll('.play-track').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const trackUri = event.target.getAttribute('data-uri');
+                        playTrack(trackUri, pausedPosition);
+                    });
+                });
+            } else {
+                resultsContainer.innerHTML = '<p>No results found.</p>';
+            }
+        });
 }
 
 // make work with html
@@ -143,14 +194,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('login').style.display = 'none';
         document.getElementById('player').style.display = 'block';
-        
+
         if (typeof Spotify !== 'undefined') {
             window.onSpotifyWebPlaybackSDKReady();
         }
         
-        document.getElementById('play-btn').addEventListener('click', playLastPlayedTrack);
+        fetchLastPlayedTrack();
+        
+        document.getElementById('play-btn').addEventListener('click', () => {
+            if (pausedTrack) {
+                playTrack(pausedTrack.uri, pausedPosition);
+            } else if (lastPlayedTrack) {
+                playTrack(lastPlayedTrack);
+            }
+        });
         document.getElementById('pause-btn').addEventListener('click', pauseTrack);
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-input').value;
+            searchSongs(query);
+        });
     } else {
         document.getElementById('login-btn').addEventListener('click', redirectToSpotifyLogin);
     }

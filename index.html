@@ -9,23 +9,32 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <h1>peepeepoopoo</h1>
     <div id="login">
-        <button id="login-btn">login</button>
+        <button id="login-btn">peepeepoopoo</button>
     </div>
+    
     <div id="player" style="display: none;">
-        <h2 id="track-name">Track Name</h2>
-        <p id="track-artist">Artist</p>
-        <img id="track-image" alt="Track Image" />
-        <p id="track-album">Album Name</p>
-        <p id="release-date">Release Date</p>
-        <p id="track-duration">Duration</p>
-        <button id="play-btn">play dat shit</button>
-        <button id="pause-btn">pause dat shit</button>
-        <button id="logout-btn">log out</button>
+        <div id="track-info">
+            <h2 id="track-name">track Name</h2>
+            <p id="track-artist">artist Name</p>
+            <p id="track-album">album Name</p>
+            <p id="track-duration">album Name</p>
+            <img id="track-image" alt="Album Art">
+        </div>
+        <button id="play-btn">play</button>
+        <button id="pause-btn">pause</button>
+        <button id="logout-btn">logout</button>
+
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search for a song...">
+            <button id="search-btn">Search</button>
+        </div>
+        <div id="search-results"></div>
+
+
     </div>
-    <div>
-        <a href="user-info.html">info</a>
-    </div>
+
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="js/spotify.js"></script>
 </body>
 </html>
