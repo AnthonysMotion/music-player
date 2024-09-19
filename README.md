@@ -23,6 +23,7 @@ index.html controls spotify playback
 - control spotify playback
     - next/prev song buttons
     - loop/shuffle buttons
+    - seek and set time playback
 - set volume
 - display more user info & stats
     - stats from lastfm n stuff
