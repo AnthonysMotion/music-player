@@ -6,5 +6,4 @@ https://developer.spotify.com/documentation/web-playback-sdk
 <br>https://developer.spotify.com/documentation/web-api
 
 ### frontend
-standard html & js
-<br>https://tailwindcss.com/
+standard html css js
