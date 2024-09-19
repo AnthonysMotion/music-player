@@ -1,5 +1,5 @@
-const clientId = '1bb93e0197cd43eda134cc008e1d05cd';  // Replace with your Spotify Client ID
-const redirectUri = 'http://127.0.0.1:5500';  // Replace with your Redirect URI
+const clientId = '1bb93e0197cd43eda134cc008e1d05cd';
+const redirectUri = 'http://127.0.0.1:5500';
 const scopes = 'streaming user-read-email user-read-private user-top-read user-modify-playback-state user-read-playback-state';
 
 let accessToken = '';
@@ -18,16 +18,16 @@ function redirectToSpotifyLogin() {
     window.location = authUrl;
 }
 
-function redirectToSpotifyLogout() {
-    // Clear the access token from local storage
+// clear access token and show login page
+function handleLogout() {
     localStorage.removeItem('spotifyAccessToken');
-    // Redirect to the Spotify logout URL
-    window.location = 'https://accounts.spotify.com/logout';
+    accessToken = '';
+    document.getElementById('login').style.display = 'block';
+    document.getElementById('player').style.display = 'none';
 }
 
 window.onSpotifyWebPlaybackSDKReady = () => {
     if (typeof Spotify === 'undefined') {
-        console.error('spotify sdk not ready');
         return;
     }
     
@@ -41,10 +41,10 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         deviceId = device_id;
     });
     
-    player.addListener('initialization_error', ({ message }) => { console.error('Initialization Error:', message); });
-    player.addListener('authentication_error', ({ message }) => { console.error('Authentication Error:', message); });
-    player.addListener('account_error', ({ message }) => { console.error('account error: ', message); });
-    player.addListener('playback_error', ({ message }) => { console.error('playback error: ', message); });
+    player.addListener('initialization_error', ({ message }) => { });
+    player.addListener('authentication_error', ({ message }) => { });
+    player.addListener('account_error', ({ message }) => { });
+    player.addListener('playback_error', ({ message }) => { });
     
     player.addListener('player_state_changed', (state) => {
         if (state) {
@@ -58,7 +58,6 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 // play da song (its set to tsubi club - laced up for now)
 function playTrack() {
     if (!deviceId) {
-        console.error('no device id');
         return;
     }
     
@@ -69,17 +68,12 @@ function playTrack() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`
         }
-    }).then(response => {
-        if (!response.ok) {
-            console.error('track cannot play: ', response);
-        }
-    }).catch(error => console.error('Error playing track:', error));
+    });
 }
 
 // pause da song
 function pauseTrack() {
     if (!deviceId) {
-        console.error('no device id');
         return;
     }
     
@@ -89,11 +83,7 @@ function pauseTrack() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`
         }
-    }).then(response => {
-        if (!response.ok) {
-            console.error('cannot pause: ', response);
-        }
-    }).catch(error => console.error('Error pausing playback:', error));
+    });
 }
 
 // make work with html
@@ -108,13 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (typeof Spotify !== 'undefined') {
             window.onSpotifyWebPlaybackSDKReady();
-        } else {
-            console.error('spotify sdk not loaded');
         }
         
         document.getElementById('play-btn').addEventListener('click', playTrack);
         document.getElementById('pause-btn').addEventListener('click', pauseTrack);
-        document.getElementById('logout-btn').addEventListener('click', redirectToSpotifyLogout);
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
     } else {
         document.getElementById('login-btn').addEventListener('click', redirectToSpotifyLogin);
     }
