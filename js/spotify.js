@@ -81,7 +81,7 @@ function playTrack(trackUri, positionMs = 0) {
                         'Authorization': `Bearer ${accessToken}`
                     }
                 });
-            }, 100);
+            }, 10);
         }
     });
 }
